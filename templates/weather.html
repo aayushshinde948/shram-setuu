@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Agricultural Weather & Smart Advisories — Shram setuu{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+  <!-- PAGE HEADER -->
+  <div class="section-header" style="text-align: left; margin-bottom: 2rem;">
+    <span class="section-badge"><i class="fa-solid fa-cloud-sun-rain"></i> Agro-Meteorology</span>
+    <h1 class="section-title">Agricultural Weather & Farm Advisories</h1>
+    <p class="section-subtitle" style="margin: 0;">
+      Real-time agricultural weather forecasts combined with smart advisory tips on irrigation timing, pesticide spraying windows, and frost/heat protection.
+    </p>
+  </div>
+
+  <!-- LOCATION SWITCHER STRIP -->
+  <div class="filter-search-strip" style="margin-bottom: 2rem;">
+    <div style="font-weight: 700; color: var(--forest-dark); margin-bottom: 0.75rem;">
+      <i class="fa-solid fa-location-dot" style="color: var(--amber-warm);"></i> Select Regional Farming Center / District:
+    </div>
+    <div class="filter-pills-row">
+      {% for k, v in cities.items() %}
+        <a href="{{ url_for('weather', city=k) }}" class="filter-pill {% if city_key == k %}active{% endif %}">
+          {{ v.name }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- WEATHER HERO CARD -->
+  <div class="weather-hero-card">
+    <div class="weather-header-row">
+      <div>
+        <div style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #86efac; font-weight: 700;">
+          <i class="fa-solid fa-map-pin"></i> {{ city_info.region }}
+        </div>
+        <h2 class="weather-city-title">{{ city_info.name }}</h2>
+        <div style="font-size: 0.85rem; color: #e0f2fe; margin-top: 0.4rem;">
+          {% if weather.is_live %}
+            <span style="background: rgba(34,197,94,0.3); border: 1px solid #86efac; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-weight: 600;"><i class="fa-solid fa-bolt"></i> Live Agro-Meteorological Feed (Open-Meteo)</span>
+          {% else %}
+            <span style="background: rgba(245,158,11,0.3); border: 1px solid #fcd34d; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); color: #fef3c7; font-weight: 700;"><i class="fa-solid fa-triangle-exclamation"></i> Demonstration / Simulated Seasonal Weather Data (Live API offline)</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="text-align: right;">
+        <div style="font-size: 2.2rem; color: #fef08a;">
+          <i class="fa-solid {{ weather.icon }}"></i>
+        </div>
+        <div style="font-size: 1.15rem; font-weight: 700;">{{ weather.condition }}</div>
+      </div>
+    </div>
+
+    <!-- Main Temp & Metrics -->
+    <div class="weather-main-display">
+      <div class="weather-temp-huge">
+        {{ weather.temp }}<sup>°C</sup>
+      </div>
+
+      <div class="weather-metrics-grid">
+        <div class="weather-metric-tile">
+          <div style="font-size: 1.25rem; margin-bottom: 0.25rem; color: #bae6fd;"><i class="fa-solid fa-droplet"></i></div>
+          <div style="font-size: 1.1rem; font-weight: 800;">{{ weather.humidity }}%</div>
+          <div style="font-size: 0.75rem; color: #e2e8f0;">Humidity</div>
+        </div>
+
+        <div class="weather-metric-tile">
+          <div style="font-size: 1.25rem; margin-bottom: 0.25rem; color: #fef08a;"><i class="fa-solid fa-wind"></i></div>
+          <div style="font-size: 1.1rem; font-weight: 800;">{{ weather.wind }} <span style="font-size: 0.75rem;">km/h</span></div>
+          <div style="font-size: 0.75rem; color: #e2e8f0;">Wind Speed</div>
+        </div>
+
+        <div class="weather-metric-tile">
+          <div style="font-size: 1.25rem; margin-bottom: 0.25rem; color: #86efac;"><i class="fa-solid fa-cloud-showers-heavy"></i></div>
+          <div style="font-size: 1.1rem; font-weight: 800;">{{ weather.rain_prob }}%</div>
+          <div style="font-size: 0.75rem; color: #e2e8f0;">Rain Chance</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5-Day Forecast -->
+    <div style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.2);">
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: #e0f2fe;">
+        <i class="fa-solid fa-calendar-days"></i> 5-Day Farm Weather Forecast
+      </h3>
+      <div class="forecast-grid">
+        {% for f in weather.forecast %}
+          <div class="forecast-day-card">
+            <div style="font-weight: 700; font-size: 0.92rem; color: #ffffff;">{{ f.day }}</div>
+            <div class="forecast-icon">
+              <i class="fa-solid {{ f.icon }}"></i>
+            </div>
+            <div style="font-weight: 800; font-size: 1.1rem;">{{ f.max_temp }}° / <span style="font-size: 0.85rem; font-weight: 500; opacity: 0.8;">{{ f.min_temp }}°</span></div>
+            <div style="font-size: 0.78rem; color: #bae6fd; margin-top: 0.35rem;">
+              <i class="fa-solid fa-droplet"></i> {{ f.rain_prob }}% Rain
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- FARMING WEATHER ADVISORIES SECTION -->
+  <div style="margin-top: 3.5rem;">
+    <div class="section-header" style="text-align: left; margin-bottom: 1.75rem;">
+      <span class="section-badge"><i class="fa-solid fa-lightbulb"></i> Actionable Field Intelligence</span>
+      <h2 class="section-title">Farming Weather Tips & Operational Advisories</h2>
+      <p class="section-subtitle" style="margin: 0;">
+        Automated agronomical recommendations calibrated for current temperature, precipitation, and wind velocity in {{ city_info.name }}.
+      </p>
+    </div>
+
+    <div class="agri-tips-grid">
+      {% for tip in weather.tips %}
+        <div class="agri-tip-card {{ tip.type }}">
+          <div class="agri-tip-header">
+            <i class="fa-solid {{ tip.icon }}"></i>
+            <span>{{ tip.title }}</span>
+          </div>
+          <p style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;">
+            {{ tip.text }}
+          </p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

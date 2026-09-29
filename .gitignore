@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Local application data
+# Never commit the SQLite database because it may contain user-generated/private data.
+database/*.db
+*.sqlite
+*.sqlite3

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Farming Tools & Machinery — Shram setuu{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+  <!-- PAGE HEADER -->
+  <div class="section-header" style="text-align: left; margin-bottom: 2rem;">
+    <span class="section-badge"><i class="fa-solid fa-tractor"></i> Farm Mechanization</span>
+    <h1 class="section-title">Farming Tools & Equipment</h1>
+    <p class="section-subtitle" style="margin: 0;">
+      Explore modern farm implements, tractor attachments, solar micro-irrigation kits, and precision agricultural drones with government subsidy details.
+    </p>
+  </div>
+
+  <!-- SEARCH & FILTER BAR -->
+  <div class="filter-search-strip">
+    <form action="{{ url_for('tools') }}" method="GET">
+      <div class="search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" name="q" value="{{ search_query }}" class="search-input" id="liveFilterInput" placeholder="Search equipment by name (e.g. Rotavator, Drone, Drip, Sprayer), implement type, or HP...">
+      </div>
+
+      <div class="filter-pills-row">
+        <span style="font-size: 0.88rem; font-weight: 700; color: var(--forest-dark); margin-right: 0.5rem;">Filter Category:</span>
+        {% for cat in categories %}
+          <a href="{{ url_for('tools', cat=cat, q=search_query) }}" class="filter-pill {% if active_cat == cat %}active{% endif %}">
+            {{ cat }}
+          </a>
+        {% endfor %}
+      </div>
+    </form>
+  </div>
+
+  <!-- TOOLS DIRECTORY GRID -->
+  {% if tools %}
+    <div class="resource-grid">
+      {% for tool in tools %}
+        <div class="resource-card">
+          <div class="resource-card-img-wrap">
+            <img src="{{ tool.image_url }}" alt="{{ tool.title }}" class="resource-card-img" loading="lazy">
+            <span class="resource-badge-tag">{{ tool.category_name }}</span>
+            <button class="bookmark-btn-overlay bookmark-btn-toggle {% if tool.id in bookmarked_ids %}saved{% endif %}" data-id="{{ tool.id }}" title="Bookmark this tool">
+              <i class="{% if tool.id in bookmarked_ids %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i>
+            </button>
+          </div>
+
+          <div class="resource-card-body">
+            <div class="resource-meta-top">
+              <span><i class="fa-solid fa-gears"></i> {{ tool.provider }}</span>
+              {% if ratings_map.get(tool.id) %}
+                <span class="rating-badge-mini"><i class="fa-solid fa-star"></i> {{ ratings_map[tool.id].avg }}</span>
+              {% endif %}
+            </div>
+
+            <h3 class="resource-card-title">{{ tool.title }}</h3>
+            <p class="resource-card-desc">{{ tool.description }}</p>
+
+            <div class="resource-info-box">
+              <div class="resource-info-row">
+                <i class="fa-solid fa-wrench"></i>
+                <div><strong>Specs & Type:</strong> {{ tool.season_climate }}</div>
+              </div>
+              <div class="resource-info-row">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+                <div><strong>Efficiency / Subsidy:</strong> {{ tool.benefits[:85] }}...</div>
+              </div>
+            </div>
+
+            <div class="resource-card-footer">
+              <button class="btn btn-secondary btn-sm open-details-modal" data-id="{{ tool.id }}">
+                <i class="fa-solid fa-circle-info"></i> Tool Specs
+              </button>
+              <div style="display: flex; gap: 0.4rem;">
+                <button class="btn btn-secondary btn-sm open-rating-modal" data-id="{{ tool.id }}" data-title="{{ tool.title }}" title="Rate & Review">
+                  <i class="fa-solid fa-star" style="color: var(--amber-warm);"></i>
+                </button>
+                <a href="{{ tool.external_url }}" target="_blank" class="btn btn-primary btn-sm" rel="noopener noreferrer">
+                  <span>Govt Portal</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 4rem 1.5rem; background: #ffffff; border-radius: var(--radius-lg); border: 1px solid var(--border-light);">
+      <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;">
+        <i class="fa-solid fa-tractor"></i>
+      </div>
+      <h3 style="font-size: 1.4rem; color: var(--forest-dark); margin-bottom: 0.5rem;">No Tools Found Matching Your Search</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Try changing your search keywords or switching category filters.</p>
+      <a href="{{ url_for('tools') }}" class="btn btn-secondary">Reset Filters</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

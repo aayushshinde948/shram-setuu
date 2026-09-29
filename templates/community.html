@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Farmer Community & Discussion Forum — Shram setuu{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+  <!-- PAGE HEADER -->
+  <div class="section-header" style="text-align: left; margin-bottom: 2.5rem; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span class="section-badge"><i class="fa-solid fa-people-group"></i> Collective Intelligence</span>
+      <h1 class="section-title" style="margin-bottom: 0.25rem;">Farmer Community & Helplines</h1>
+      <p class="section-subtitle" style="margin: 0;">
+        Connect with Krishi Vigyan Kendras, national toll-free helplines, and engage with fellow farmers to ask questions, solve pest problems, and share field experiences.
+      </p>
+    </div>
+    {% if current_user %}
+      <button class="btn btn-primary btn-lg" onclick="openModal('newPostModal')">
+        <i class="fa-solid fa-plus"></i> Ask a Question
+      </button>
+    {% else %}
+      <a href="{{ url_for('login', next=url_for('community')) }}" class="btn btn-primary btn-lg">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> Login to Ask Question
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="community-layout">
+
+    <!-- LEFT COLUMN: DISCUSSION FORUM POSTS -->
+    <div>
+      <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--forest-dark);">
+          <i class="fa-solid fa-comments" style="color: var(--primary-green);"></i> Farmer Discussions & Q&A
+        </h2>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">{{ posts|length }} Active Topics</span>
+      </div>
+
+      {% if posts %}
+        {% for post in posts %}
+          <div class="post-card">
+            <!-- Author & Header -->
+            <div class="post-author-row">
+              <div class="post-author-info">
+                <div class="post-avatar">
+                  {{ post.author_name[:1] }}
+                </div>
+                <div>
+                  <div style="font-weight: 700; font-size: 0.95rem; color: var(--forest-dark);">
+                    {{ post.author_name }}
+                  </div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-location-dot"></i> {{ post.author_state }} &bull; {{ post.created_at|format_date }}
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="section-badge" style="margin-bottom: 0; font-size: 0.75rem;">{{ post.category }}</span>
+                {% if current_user and (current_user.id == post.user_id or current_user.role == 'admin') %}
+                  <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this post?');" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Post" style="padding: 0.2rem 0.5rem;">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Post Content -->
+            <h3 class="post-title">{{ post.title }}</h3>
+            <p class="post-content">{{ post.content }}</p>
+
+            <!-- Actions Bar (Likes & Comments) -->
+            <div class="post-actions-bar">
+              <button class="like-btn like-btn-ajax {% if post.id in user_liked_posts %}liked{% endif %}" data-post-id="{{ post.id }}">
+                <i class="{% if post.id in user_liked_posts %}fa-solid{% else %}fa-regular{% endif %} fa-thumbs-up"></i>
+                <span class="like-count">{{ post.like_count }}</span>
+                <span>Likes</span>
+              </button>
+
+              <div style="font-size: 0.88rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
+                <i class="fa-regular fa-comment-dots"></i>
+                <span>{{ post.comment_count }} Comments</span>
+              </div>
+            </div>
+
+            <!-- Comments Thread -->
+            <div class="comments-thread">
+              {% if comments_by_post.get(post.id) %}
+                <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1rem;">
+                  {% for c in comments_by_post[post.id] %}
+                    <div class="comment-bubble">
+                      <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; color: var(--forest-dark); margin-bottom: 0.25rem;">
+                        <span>{{ c.comment_author }} <span style="font-weight: 400; color: var(--text-muted);">({{ c.comment_state }})</span></span>
+                        <span style="font-weight: 400; color: var(--text-light);">{{ c.created_at|format_date }}</span>
+                      </div>
+                      <p style="font-size: 0.9rem; color: var(--text-main); margin: 0;">{{ c.comment }}</p>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">No replies yet. Be the first to answer this question!</p>
+              {% endif %}
+
+              <!-- Add Comment Input Form -->
+              {% if current_user %}
+                <form action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" style="display: flex; gap: 0.5rem;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <input type="text" name="comment" class="form-control" placeholder="Write a helpful reply or advice..." required style="padding: 0.55rem 0.85rem; font-size: 0.88rem;">
+                  <button type="submit" class="btn btn-primary btn-sm" style="flex-shrink: 0;">
+                    <i class="fa-solid fa-paper-plane"></i> Reply
+                  </button>
+                </form>
+              {% else %}
+                <div style="font-size: 0.82rem; color: var(--text-muted);">
+                  <a href="{{ url_for('login', next=url_for('community')) }}" style="font-weight: 700;">Login</a> to reply to this discussion.
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div style="background: #ffffff; border-radius: var(--radius-lg); padding: 3rem 1.5rem; text-align: center; border: 1px solid var(--border-light);">
+          <i class="fa-solid fa-comments" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+          <h3 style="font-size: 1.3rem; color: var(--forest-dark); margin-bottom: 0.5rem;">No Questions Yet</h3>
+          <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Have an agricultural doubt or farming question? Post it to the community.</p>
+          {% if current_user %}
+            <button class="btn btn-primary" onclick="openModal('newPostModal')">Ask a Question</button>
+          {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-primary">Login to Post</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT COLUMN: INSTITUTIONAL HELPLINES & EXTENSION CENTRES -->
+    <div>
+      <div style="margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--forest-dark);">
+          <i class="fa-solid fa-headset" style="color: var(--amber-warm);"></i> Helplines & KVKs
+        </h2>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Official extension agencies</span>
+      </div>
+
+      <!-- Toll Free Call Banner -->
+      <div style="background: linear-gradient(135deg, var(--forest-dark), var(--primary-green)); color: #fff; border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-md);">
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #86efac; font-weight: 700; margin-bottom: 0.4rem;">
+          <i class="fa-solid fa-phone-volume"></i> 24x7 Government Helpline
+        </div>
+        <h3 style="font-size: 1.5rem; font-weight: 800; color: #fef08a; margin-bottom: 0.5rem;">
+          1800-180-1551
+        </h3>
+        <p style="font-size: 0.85rem; color: #d1fae5; line-height: 1.5; margin-bottom: 1rem;">
+          National Kisan Call Center answers queries in 22 local Indian languages directly with agricultural experts.
+        </p>
+        <a href="tel:18001801551" class="btn btn-accent btn-sm" style="width: 100%;">
+          <i class="fa-solid fa-phone"></i> Call Toll-Free Helpline
+        </a>
+      </div>
+
+      <!-- Institutional Cards -->
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        {% for inst in institutions %}
+          <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: var(--shadow-sm);">
+            <span class="section-badge" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; margin-bottom: 0.5rem;">{{ inst.category_name }}</span>
+            <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--forest-dark); margin-bottom: 0.4rem;">{{ inst.title }}</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">{{ inst.description }}</p>
+            <a href="{{ inst.external_url }}" target="_blank" class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;" rel="noopener noreferrer">
+              <span>Visit Portal</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: CREATE NEW COMMUNITY POST -->
+{% if current_user %}
+  <div class="modal-backdrop" id="newPostModal">
+    <div class="modal-dialog">
+      <button class="modal-close-btn" onclick="closeModal('newPostModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div style="margin-bottom: 1.25rem;">
+        <span class="section-badge"><i class="fa-solid fa-pen-to-square"></i> New Question</span>
+        <h2 class="resource-card-title" style="font-size: 1.4rem; margin-top: 0.5rem;">Ask the Farmer Community</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Share crop issues, pest problems, machinery queries, or government scheme application questions.</p>
+      </div>
+
+      <form action="{{ url_for('community') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="form-group">
+          <label for="postTitle" class="form-label">Question / Topic Title *</label>
+          <input type="text" name="title" id="postTitle" class="form-control" placeholder="e.g. Best bio-pesticide for shoot borer in brinjal?" required>
+        </div>
+
+        <div class="form-group">
+          <label for="postCategory" class="form-label">Category *</label>
+          <select name="category" id="postCategory" class="form-control" required>
+            <option value="Pest Control & Diseases">Pest Control & Crop Diseases</option>
+            <option value="Seeds & Crops">Seeds, Varieties & Sowing</option>
+            <option value="Irrigation & Subsidies">Irrigation & PMKSY Subsidies</option>
+            <option value="Government Schemes">PM-KISAN / PMFBY Queries</option>
+            <option value="Machinery & Implements">Farm Machinery & Tools</option>
+            <option value="Organic Farming">Organic & Natural Farming</option>
+            <option value="Mandi Prices & Selling">Mandi Prices & Crop Selling</option>
+            <option value="General Discussion">General Farming Discussion</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="postContent" class="form-label">Detailed Explanation *</label>
+          <textarea name="content" id="postContent" class="form-control" rows="5" placeholder="Describe your field conditions, crop stage, symptoms observed, soil type, and location to get accurate advice from other experienced farmers." required></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('newPostModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Publish Question</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

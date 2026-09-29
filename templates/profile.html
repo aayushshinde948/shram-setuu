@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Farmer Profile — Shram setuu{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 1.5rem; padding-bottom: 4rem;">
+
+  <div class="section-header" style="text-align: left; margin-bottom: 1.5rem;">
+    <span class="section-badge"><i class="fa-solid fa-id-card"></i> Farmer Account</span>
+    <h1 class="section-title">My Farmer Profile</h1>
+    <p class="section-subtitle" style="margin: 0;">
+      Manage your personal farming preferences, state location, account credentials, and platform activity.
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+
+    <!-- LEFT COLUMN: PROFILE CARD & STATS -->
+    <div>
+      <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm); text-align: center; margin-bottom: 1.5rem;">
+        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-green), var(--forest-dark)); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 800; margin: 0 auto 1rem; box-shadow: var(--shadow-md);">
+          {{ user.full_name[:1] }}
+        </div>
+        <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--forest-dark); margin-bottom: 0.25rem;">{{ user.full_name }}</h2>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">@{{ user.username }} &bull; <span class="admin-tag" style="background: #dcfce7; color: #166534;">{{ user.role|upper }}</span></div>
+        <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--mint-bg); border: 1px solid var(--border-green); padding: 0.35rem 0.85rem; border-radius: var(--radius-full); font-size: 0.85rem; color: var(--forest-dark); font-weight: 600;">
+          <i class="fa-solid fa-location-dot" style="color: var(--amber-warm);"></i> {{ user.state }}
+        </div>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-light); text-align: left; font-size: 0.88rem; color: var(--text-muted);">
+          <div style="margin-bottom: 0.5rem;"><i class="fa-solid fa-envelope"></i> {{ user.email }}</div>
+          <div style="margin-bottom: 0.5rem;"><i class="fa-solid fa-seedling"></i> Focus: <strong>{{ user.preferred_category }}</strong></div>
+          <div><i class="fa-solid fa-calendar-check"></i> Member since: <strong>{{ user.created_at|format_date }}</strong></div>
+        </div>
+      </div>
+
+      <!-- Activity Metrics -->
+      <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--forest-dark); margin-bottom: 1rem;">Platform Engagement</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+            <span style="font-size: 0.9rem; color: var(--text-muted);"><i class="fa-solid fa-bookmark" style="color: var(--amber-warm);"></i> Bookmarked Resources</span>
+            <span style="font-weight: 800; font-size: 1.1rem; color: var(--forest-dark);">{{ bookmarks_count }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light);">
+            <span style="font-size: 0.9rem; color: var(--text-muted);"><i class="fa-solid fa-comments" style="color: var(--primary-green);"></i> Community Questions</span>
+            <span style="font-weight: 800; font-size: 1.1rem; color: var(--forest-dark);">{{ posts_count }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0;">
+            <span style="font-size: 0.9rem; color: var(--text-muted);"><i class="fa-solid fa-star" style="color: var(--amber-warm);"></i> Reviews & Ratings</span>
+            <span style="font-weight: 800; font-size: 1.1rem; color: var(--forest-dark);">{{ feedback_count }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: EDIT PROFILE FORM -->
+    <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 2.5rem; box-shadow: var(--shadow-sm);">
+      <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--forest-dark); margin-bottom: 1.5rem;">
+        <i class="fa-solid fa-user-pen" style="color: var(--primary-green);"></i> Edit Profile Details
+      </h2>
+
+      <form action="{{ url_for('profile') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+          <div class="form-group">
+            <label for="profName" class="form-label">Full Name *</label>
+            <input type="text" name="full_name" id="profName" class="form-control" value="{{ user.full_name }}" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" value="{{ user.username }}" disabled style="background-color: var(--bg-page); color: var(--text-muted);">
+            <small style="font-size: 0.75rem; color: var(--text-muted);">Username cannot be changed</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="profEmail" class="form-label">Email Address *</label>
+          <input type="email" name="email" id="profEmail" class="form-control" value="{{ user.email }}" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+          <div class="form-group">
+            <label for="profState" class="form-label">State / UT *</label>
+            <select name="state" id="profState" class="form-control" required>
+              {% for st in indian_states %}
+                <option value="{{ st }}" {% if user.state == st %}selected{% endif %}>{{ st }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="profPref" class="form-label">Preferred Farming Interest</label>
+            <select name="preferred_category" id="profPref" class="form-control">
+              <option value="General" {% if user.preferred_category == 'General' %}selected{% endif %}>All Agriculture Topics</option>
+              <option value="Crops" {% if user.preferred_category == 'Crops' %}selected{% endif %}>Seeds & Crops (धान, गेहूं, मक्का)</option>
+              <option value="Organic Farming" {% if user.preferred_category == 'Organic Farming' %}selected{% endif %}>Organic & Natural Farming</option>
+              <option value="Government Schemes" {% if user.preferred_category == 'Government Schemes' %}selected{% endif %}>Government Schemes (PM-KISAN, PMFBY)</option>
+              <option value="Farming Tools" {% if user.preferred_category == 'Farming Tools' %}selected{% endif %}>Farming Tools & Modern Mechanization</option>
+              <option value="Irrigation" {% if user.preferred_category == 'Irrigation' %}selected{% endif %}>Micro-Irrigation & Solar Pumps</option>
+              <option value="Vegetables" {% if user.preferred_category == 'Vegetables' %}selected{% endif %}>Horticulture & Vegetables</option>
+              <option value="Credit Support" {% if user.preferred_category == 'Credit Support' %}selected{% endif %}>KCC Loans & Subsidies</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Change Password Section -->
+        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-light);">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--forest-dark); margin-bottom: 0.5rem;">Update Password (Optional)</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Leave blank if you wish to keep your current password.</p>
+
+          <div class="form-group">
+            <label for="newPass" class="form-label">New Password</label>
+            <input type="password" name="new_password" id="newPass" class="form-control" placeholder="•••••••• (min 6 characters)" minlength="6">
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+          <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-floppy-disk"></i> Save Profile Changes
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

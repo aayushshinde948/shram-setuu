@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Control Center — Shram setuu{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+  <!-- PAGE HEADER -->
+  <div class="section-header" style="text-align: left; margin-bottom: 2rem; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span class="section-badge" style="background-color: #fee2e2; color: #b91c1c; border-color: #fca5a5;">
+        <i class="fa-solid fa-shield-halved"></i> Administrator Portal
+      </span>
+      <h1 class="section-title" style="margin-bottom: 0.25rem;">Admin Control Center</h1>
+      <p class="section-subtitle" style="margin: 0;">
+        Manage verified agriculture resources, government schemes, registered users, community discussions, and review feedback ratings.
+      </p>
+    </div>
+    <button class="btn btn-primary btn-lg" onclick="openModal('addResourceModal')">
+      <i class="fa-solid fa-plus"></i> Add New Resource
+    </button>
+  </div>
+
+  <!-- ADMIN METRICS KPI CARDS -->
+  <div class="admin-metrics-grid">
+    <div class="admin-metric-card">
+      <div class="admin-metric-val">{{ stats.total_users }}</div>
+      <div class="admin-metric-label"><i class="fa-solid fa-users"></i> Total Users</div>
+    </div>
+
+    <div class="admin-metric-card">
+      <div class="admin-metric-val" style="color: #0284c7;">{{ stats.total_resources }}</div>
+      <div class="admin-metric-label"><i class="fa-solid fa-layer-group"></i> Total Resources</div>
+    </div>
+
+    <div class="admin-metric-card">
+      <div class="admin-metric-val" style="color: #059669;">{{ stats.total_categories }}</div>
+      <div class="admin-metric-label"><i class="fa-solid fa-tags"></i> Categories</div>
+    </div>
+
+    <div class="admin-metric-card">
+      <div class="admin-metric-val" style="color: #d97706;">{{ stats.total_bookmarks }}</div>
+      <div class="admin-metric-label"><i class="fa-solid fa-bookmark"></i> Total Bookmarks</div>
+    </div>
+
+    <div class="admin-metric-card">
+      <div class="admin-metric-val" style="color: #9333ea;">{{ stats.total_posts }}</div>
+      <div class="admin-metric-label"><i class="fa-solid fa-comments"></i> Community Posts</div>
+    </div>
+
+    <div class="admin-metric-card">
+      <div class="admin-metric-val" style="color: #ea580c;">★ {{ stats.avg_rating }}</div>
+      <div class="admin-metric-label"><i class="fa-solid fa-star"></i> Avg. Rating ({{ stats.total_feedback }})</div>
+    </div>
+  </div>
+
+  <!-- TABBED NAVIGATION STRIP -->
+  <div class="filter-search-strip" style="margin-bottom: 2rem;">
+    <div class="filter-pills-row">
+      <button class="filter-pill active" onclick="showAdminTab('tab-resources', this)">
+        <i class="fa-solid fa-database"></i> Manage Resources ({{ resources|length }})
+      </button>
+      <button class="filter-pill" onclick="showAdminTab('tab-users', this)">
+        <i class="fa-solid fa-users-gear"></i> Manage Users ({{ users|length }})
+      </button>
+      <button class="filter-pill" onclick="showAdminTab('tab-community', this)">
+        <i class="fa-solid fa-comments"></i> Community Posts ({{ posts|length }})
+      </button>
+      <button class="filter-pill" onclick="showAdminTab('tab-feedback', this)">
+        <i class="fa-solid fa-star-half-stroke"></i> Feedback & Ratings ({{ feedback_list|length }})
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB 1: MANAGE RESOURCES -->
+  <div id="tab-resources" class="admin-tab-content">
+    <div class="admin-table-wrap">
+      <table class="mandi-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title & Provider</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Bookmarks</th>
+            <th>Rating</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in resources %}
+            <tr>
+              <td style="font-weight: 700;">#{{ r.id }}</td>
+              <td>
+                <div style="font-weight: 700; color: var(--forest-dark);">{{ r.title }}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">{{ r.provider }}</div>
+              </td>
+              <td>
+                <span class="section-badge" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; text-transform: capitalize;">
+                  {{ r.resource_type }}
+                </span>
+              </td>
+              <td style="font-size: 0.85rem;">{{ r.category_name }}</td>
+              <td style="font-weight: 700;"><i class="fa-solid fa-bookmark" style="color: var(--amber-warm);"></i> {{ r.bookmark_count }}</td>
+              <td style="font-weight: 700; color: #b45309;">
+                {% if r.avg_rating > 0 %}
+                  ★ {{ "%.1f"|format(r.avg_rating) }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <button class="btn btn-secondary btn-sm admin-edit-btn"
+                          data-id="{{ r.id }}"
+                          data-title="{{ r.title }}"
+                          data-type="{{ r.resource_type }}"
+                          data-category="{{ r.category_name }}"
+                          data-desc="{{ r.description }}"
+                          data-url="{{ r.external_url }}"
+                          data-provider="{{ r.provider }}"
+                          data-climate="{{ r.season_climate }}"
+                          data-eligibility="{{ r.eligibility }}"
+                          data-benefits="{{ r.benefits }}"
+                          title="Edit Resource">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  <form action="{{ url_for('admin_delete_resource', res_id=r.id) }}" method="POST" onsubmit="return confirm('Delete this resource permanently?');" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Resource">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 2: MANAGE USERS -->
+  <div id="tab-users" class="admin-tab-content" style="display: none;">
+    <div class="admin-table-wrap">
+      <table class="mandi-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Full Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>State</th>
+            <th>Role</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+            <tr>
+              <td style="font-weight: 700;">#{{ u.id }}</td>
+              <td style="font-weight: 700; color: var(--forest-dark);">{{ u.full_name }}</td>
+              <td>@{{ u.username }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.state }}</td>
+              <td>
+                {% if u.role == 'admin' %}
+                  <span class="admin-tag">ADMIN</span>
+                {% else %}
+                  <span class="section-badge" style="font-size: 0.72rem; padding: 0.15rem 0.5rem;">FARMER</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.85rem; color: var(--text-muted);">{{ u.created_at|format_date }}</td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  {% if u.id != current_user.id %}
+                    <form action="{{ url_for('admin_toggle_user_role', u_id=u.id) }}" method="POST" style="display: inline;">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                      <button type="submit" class="btn btn-secondary btn-sm" title="Toggle Role (User/Admin)">
+                        <i class="fa-solid fa-user-shield"></i>
+                      </button>
+                    </form>
+                    <form action="{{ url_for('admin_delete_user', u_id=u.id) }}" method="POST" onsubmit="return confirm('Delete this user and all their records?');" style="display: inline;">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                      <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete User">
+                        <i class="fa-solid fa-user-xmark"></i>
+                      </button>
+                    </form>
+                  {% else %}
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">Current User</span>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: MANAGE COMMUNITY POSTS -->
+  <div id="tab-community" class="admin-tab-content" style="display: none;">
+    <div class="admin-table-wrap">
+      <table class="mandi-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Author</th>
+            <th>Category</th>
+            <th>Title & Content Snippet</th>
+            <th>Likes</th>
+            <th>Comments</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in posts %}
+            <tr>
+              <td style="font-weight: 700;">#{{ p.id }}</td>
+              <td>
+                <div style="font-weight: 700;">{{ p.full_name }}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">@{{ p.username }}</div>
+              </td>
+              <td><span class="section-badge" style="font-size: 0.72rem; padding: 0.15rem 0.5rem;">{{ p.category }}</span></td>
+              <td>
+                <div style="font-weight: 700; color: var(--forest-dark);">{{ p.title }}</div>
+                <div style="font-size: 0.82rem; color: var(--text-muted);">{{ p.content[:80] }}...</div>
+              </td>
+              <td><i class="fa-solid fa-thumbs-up" style="color: var(--primary-green);"></i> {{ p.like_count }}</td>
+              <td><i class="fa-solid fa-comment" style="color: #0284c7;"></i> {{ p.comment_count }}</td>
+              <td style="font-size: 0.85rem; color: var(--text-muted);">{{ p.created_at|format_date }}</td>
+              <td>
+                <form action="{{ url_for('delete_post', post_id=p.id) }}" method="POST" onsubmit="return confirm('Delete this community post?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 4: MANAGE FEEDBACK & RATINGS -->
+  <div id="tab-feedback" class="admin-tab-content" style="display: none;">
+    <div class="admin-table-wrap">
+      <table class="mandi-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Resource Title</th>
+            <th>Rating</th>
+            <th>Comment</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in feedback_list %}
+            <tr>
+              <td style="font-weight: 700;">#{{ f.id }}</td>
+              <td>
+                <div style="font-weight: 700;">{{ f.full_name }}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">@{{ f.username }}</div>
+              </td>
+              <td style="font-weight: 700; color: var(--forest-dark);">{{ f.resource_title }}</td>
+              <td>
+                <span class="rating-badge-mini">
+                  <i class="fa-solid fa-star"></i> {{ f.rating }} / 5
+                </span>
+              </td>
+              <td style="font-size: 0.88rem; color: var(--text-main); max-width: 300px;">{{ f.comment }}</td>
+              <td style="font-size: 0.85rem; color: var(--text-muted);">{{ f.created_at|format_date }}</td>
+              <td>
+                <form action="{{ url_for('admin_delete_feedback', f_id=f.id) }}" method="POST" onsubmit="return confirm('Delete this feedback?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: ADD RESOURCE MODAL -->
+<div class="modal-backdrop" id="addResourceModal">
+  <div class="modal-dialog">
+    <button class="modal-close-btn" onclick="closeModal('addResourceModal')"><i class="fa-solid fa-xmark"></i></button>
+    <div style="margin-bottom: 1.25rem;">
+      <span class="section-badge"><i class="fa-solid fa-plus"></i> New Agri Entry</span>
+      <h2 class="resource-card-title" style="font-size: 1.4rem; margin-top: 0.5rem;">Add Agricultural Resource</h2>
+    </div>
+
+    <form action="{{ url_for('admin_add_resource') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="form-group">
+        <label class="form-label">Resource Title *</label>
+        <input type="text" name="title" class="form-control" placeholder="e.g. PM-KISAN or Wheat (DBW-187)" required>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Resource Type *</label>
+          <select name="resource_type" class="form-control" required>
+            <option value="scheme">Government Scheme</option>
+            <option value="crop">Seeds & Crops</option>
+            <option value="tool">Farming Tools & Implements</option>
+            <option value="loan">Loans & Subsidies</option>
+            <option value="guide">Knowledge Guide</option>
+            <option value="marketplace">Marketplace / Mandi</option>
+            <option value="community">Helpline / Institution</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Category Name</label>
+          <input type="text" name="category_name" class="form-control" placeholder="e.g. Income Support, Cereals, Irrigation">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Short Description *</label>
+        <textarea name="description" class="form-control" rows="3" placeholder="Clear summary of what this resource offers..." required></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Official Portal URL</label>
+          <input type="url" name="external_url" class="form-control" placeholder="https://pmkisan.gov.in">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Image URL</label>
+          <input type="url" name="image_url" class="form-control" placeholder="https://images.unsplash.com/...">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Department / Agency Provider</label>
+        <input type="text" name="provider" class="form-control" placeholder="e.g. Ministry of Agriculture, ICAR, NABARD">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Climate / Soil / Specs</label>
+        <input type="text" name="season_climate" class="form-control" placeholder="e.g. Kharif (June-Nov) | Temp: 20-30°C | Black Soil">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Eligibility Criteria</label>
+          <input type="text" name="eligibility" class="form-control" placeholder="e.g. Small & marginal farmers with cultivable land">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Key Benefits</label>
+          <input type="text" name="benefits" class="form-control" placeholder="e.g. Rs. 6000/yr DBT assistance in 3 installments">
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addResourceModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Save Resource</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: EDIT RESOURCE MODAL -->
+<div class="modal-backdrop" id="editResourceModal">
+  <div class="modal-dialog">
+    <button class="modal-close-btn" onclick="closeModal('editResourceModal')"><i class="fa-solid fa-xmark"></i></button>
+    <div style="margin-bottom: 1.25rem;">
+      <span class="section-badge"><i class="fa-solid fa-pen-to-square"></i> Update Record</span>
+      <h2 class="resource-card-title" style="font-size: 1.4rem; margin-top: 0.5rem;">Edit Agricultural Resource</h2>
+    </div>
+
+    <form id="editResourceForm" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="form-group">
+        <label class="form-label">Resource Title *</label>
+        <input type="text" name="title" id="editResTitle" class="form-control" required>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Resource Type *</label>
+          <select name="resource_type" id="editResType" class="form-control" required>
+            <option value="scheme">Government Scheme</option>
+            <option value="crop">Seeds & Crops</option>
+            <option value="tool">Farming Tools & Implements</option>
+            <option value="loan">Loans & Subsidies</option>
+            <option value="guide">Knowledge Guide</option>
+            <option value="marketplace">Marketplace / Mandi</option>
+            <option value="community">Helpline / Institution</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Category Name</label>
+          <input type="text" name="category_name" id="editResCategory" class="form-control">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Short Description *</label>
+        <textarea name="description" id="editResDesc" class="form-control" rows="3" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Official Portal URL</label>
+        <input type="url" name="external_url" id="editResUrl" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Department / Provider</label>
+        <input type="text" name="provider" id="editResProvider" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Climate / Soil / Specs</label>
+        <input type="text" name="season_climate" id="editResClimate" class="form-control">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Eligibility Criteria</label>
+          <input type="text" name="eligibility" id="editResEligibility" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Key Benefits</label>
+          <input type="text" name="benefits" id="editResBenefits" class="form-control">
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('editResourceModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Update Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function showAdminTab(tabId, btnEl) {
+  document.querySelectorAll('.admin-tab-content').forEach(tab => {
+    tab.style.display = 'none';
+  });
+  document.querySelectorAll('.filter-pills-row .filter-pill').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  const activeTab = document.getElementById(tabId);
+  if (activeTab) {
+    activeTab.style.display = 'block';
+  }
+  if (btnEl) {
+    btnEl.classList.add('active');
+  }
+}
+</script>
+{% endblock %}

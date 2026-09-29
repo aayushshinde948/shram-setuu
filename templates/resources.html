@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Farming Knowledge & Technique Guides — Shram setuu{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+  <!-- PAGE HEADER -->
+  <div class="section-header" style="text-align: left; margin-bottom: 2rem;">
+    <span class="section-badge"><i class="fa-solid fa-book-open"></i> Knowledge & Best Practices</span>
+    <h1 class="section-title">Farming Resources & Practical Guides</h1>
+    <p class="section-subtitle" style="margin: 0;">
+      Step-by-step agronomic manuals on organic farming, integrated pest control, soil testing, drip fertigation, and traditional Indian Vedic agriculture.
+    </p>
+  </div>
+
+  <!-- SEARCH & FILTER BAR -->
+  <div class="filter-search-strip">
+    <form action="{{ url_for('resources') }}" method="GET">
+      <div class="search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" name="q" value="{{ search_query }}" class="search-input" id="liveFilterInput" placeholder="Search guides (e.g. Zero Budget, Vermicompost, IPM, Fertigation, Crop Rotation, Soil Health)...">
+      </div>
+
+      <div class="filter-pills-row">
+        <span style="font-size: 0.88rem; font-weight: 700; color: var(--forest-dark); margin-right: 0.5rem;">Topics:</span>
+        {% for cat in categories %}
+          <a href="{{ url_for('resources', cat=cat, q=search_query) }}" class="filter-pill {% if active_cat == cat %}active{% endif %}">
+            {{ cat }}
+          </a>
+        {% endfor %}
+      </div>
+    </form>
+  </div>
+
+  <!-- GUIDES GRID -->
+  {% if guides %}
+    <div class="resource-grid">
+      {% for guide in guides %}
+        <div class="resource-card">
+          <div class="resource-card-img-wrap">
+            <img src="{{ guide.image_url }}" alt="{{ guide.title }}" class="resource-card-img" loading="lazy">
+            <span class="resource-badge-tag">{{ guide.category_name }}</span>
+            <button class="bookmark-btn-overlay bookmark-btn-toggle {% if guide.id in bookmarked_ids %}saved{% endif %}" data-id="{{ guide.id }}" title="Bookmark this guide">
+              <i class="{% if guide.id in bookmarked_ids %}fa-solid{% else %}fa-regular{% endif %} fa-bookmark"></i>
+            </button>
+          </div>
+
+          <div class="resource-card-body">
+            <div class="resource-meta-top">
+              <span><i class="fa-solid fa-flask"></i> {{ guide.provider.split('-')[0] }}</span>
+              {% if ratings_map.get(guide.id) %}
+                <span class="rating-badge-mini"><i class="fa-solid fa-star"></i> {{ ratings_map[guide.id].avg }}</span>
+              {% endif %}
+            </div>
+
+            <h3 class="resource-card-title">{{ guide.title }}</h3>
+            <p class="resource-card-desc">{{ guide.description }}</p>
+
+            <div class="resource-info-box">
+              <div class="resource-info-row">
+                <i class="fa-solid fa-lightbulb"></i>
+                <div><strong>Agronomic Benefit:</strong> {{ guide.benefits }}</div>
+              </div>
+            </div>
+
+            <div class="resource-card-footer">
+              <button class="btn btn-secondary btn-sm open-details-modal" data-id="{{ guide.id }}">
+                <i class="fa-solid fa-book-open-reader"></i> Read Summary
+              </button>
+              <div style="display: flex; gap: 0.4rem;">
+                <button class="btn btn-secondary btn-sm open-rating-modal" data-id="{{ guide.id }}" data-title="{{ guide.title }}" title="Rate Guide">
+                  <i class="fa-solid fa-star" style="color: var(--amber-warm);"></i>
+                </button>
+                <a href="{{ guide.external_url }}" target="_blank" class="btn btn-primary btn-sm" rel="noopener noreferrer">
+                  <span>Full Guide</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 4rem 1.5rem; background: #ffffff; border-radius: var(--radius-lg); border: 1px solid var(--border-light);">
+      <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;">
+        <i class="fa-solid fa-book-open"></i>
+      </div>
+      <h3 style="font-size: 1.4rem; color: var(--forest-dark); margin-bottom: 0.5rem;">No Guides Found Matching Query</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Try another keyword or explore our organic and soil management topics.</p>
+      <a href="{{ url_for('resources') }}" class="btn btn-secondary">View All Guides</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

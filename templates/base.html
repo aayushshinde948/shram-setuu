@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Shram setuu — Farmer Support & Agriculture Resource Platform{% endblock %}</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom Agri Theme CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- STICKY SITE HEADER & NAVBAR -->
+  <header class="site-header">
+    <div class="container">
+      <nav class="navbar">
+        <!-- Logo and Name -->
+        <a href="{{ url_for('index') }}" class="brand-logo" title="Shram setuu Homepage">
+          <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Shram setuu Logo" style="height: 48px; width: 48px; object-fit: contain; border-radius: 8px; margin-right: 12px;">
+          <div class="brand-logo-text">
+            <span class="brand-title">Shram setuu</span>
+            <span class="brand-tagline">Smart Resources • Stronger Farmers</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Menu -->
+        <ul class="nav-menu">
+          <li><a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}"><i class="fa-solid fa-house"></i> Home</a></li>
+          {% if current_user %}
+            <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+          {% endif %}
+          <li><a href="{{ url_for('crops') }}" class="nav-link {% if request.path == '/crops' %}active{% endif %}"><i class="fa-solid fa-seedling"></i> Crops</a></li>
+          <li><a href="{{ url_for('tools') }}" class="nav-link {% if request.path == '/tools' %}active{% endif %}"><i class="fa-solid fa-tractor"></i> Tools</a></li>
+          <li><a href="{{ url_for('schemes') }}" class="nav-link {% if request.path == '/schemes' %}active{% endif %}"><i class="fa-solid fa-building-columns"></i> Schemes</a></li>
+          <li><a href="{{ url_for('loans') }}" class="nav-link {% if request.path == '/loans' %}active{% endif %}"><i class="fa-solid fa-hand-holding-dollar"></i> Loans</a></li>
+          <li><a href="{{ url_for('resources') }}" class="nav-link {% if request.path == '/resources' %}active{% endif %}"><i class="fa-solid fa-book-open"></i> Guides</a></li>
+          <li><a href="{{ url_for('weather') }}" class="nav-link {% if request.path == '/weather' %}active{% endif %}"><i class="fa-solid fa-cloud-sun-rain"></i> Weather</a></li>
+          <li><a href="{{ url_for('marketplace') }}" class="nav-link {% if request.path == '/marketplace' %}active{% endif %}"><i class="fa-solid fa-store"></i> Market</a></li>
+          <li><a href="{{ url_for('community') }}" class="nav-link {% if request.path == '/community' %}active{% endif %}"><i class="fa-solid fa-people-group"></i> Community</a></li>
+        </ul>
+
+        <!-- Action / Auth Controls -->
+        <div class="nav-actions">
+          {% if current_user %}
+            <a href="{{ url_for('bookmarks') }}" class="btn btn-secondary btn-sm" title="Saved Resources">
+              <i class="fa-solid fa-bookmark" style="color: var(--amber-warm);"></i>
+              <span>Saved ({{ bookmarked_ids|length }})</span>
+            </a>
+
+            {% if current_user.role == 'admin' %}
+              <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm admin-tag" title="Admin Control Center">
+                <i class="fa-solid fa-shield-halved"></i> Admin
+              </a>
+            {% endif %}
+
+            <div class="user-badge">
+              <div class="user-avatar-mini">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <a href="{{ url_for('profile') }}" style="color: inherit; font-weight: 700;">{{ current_user.full_name.split(' ')[0] }}</a>
+            </div>
+
+            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger" title="Sign Out">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </a>
+          {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-secondary btn-sm">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
+            </a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">
+              <i class="fa-solid fa-user-plus"></i> Register
+            </a>
+          {% endif %}
+
+          <!-- Hamburger Button for Mobile -->
+          <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle mobile menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MOBILE NAVIGATION DRAWER -->
+  <div class="mobile-nav-drawer" id="mobileNavDrawer">
+    <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+      <div style="font-weight: 700; color: var(--forest-dark);">Shram setuu Navigation</div>
+      {% if current_user %}
+        <span class="user-badge" style="font-size: 0.8rem;">
+          <i class="fa-solid fa-user-check"></i> {{ current_user.full_name }}
+        </span>
+      {% endif %}
+    </div>
+
+    <ul class="mobile-menu-list">
+      <li><a href="{{ url_for('index') }}" class="mobile-nav-link {% if request.path == '/' %}active{% endif %}"><i class="fa-solid fa-house"></i> Home</a></li>
+      {% if current_user %}
+        <li><a href="{{ url_for('dashboard') }}" class="mobile-nav-link {% if request.path == '/dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i> Farmer Dashboard</a></li>
+        <li><a href="{{ url_for('bookmarks') }}" class="mobile-nav-link {% if request.path == '/bookmarks' %}active{% endif %}"><i class="fa-solid fa-bookmark"></i> Saved Resources ({{ bookmarked_ids|length }})</a></li>
+        <li><a href="{{ url_for('profile') }}" class="mobile-nav-link {% if request.path == '/profile' %}active{% endif %}"><i class="fa-solid fa-user-gear"></i> Farmer Profile</a></li>
+        {% if current_user.role == 'admin' %}
+          <li><a href="{{ url_for('admin_dashboard') }}" class="mobile-nav-link"><i class="fa-solid fa-shield-halved"></i> Admin Dashboard</a></li>
+        {% endif %}
+      {% endif %}
+      <li><a href="{{ url_for('crops') }}" class="mobile-nav-link {% if request.path == '/crops' %}active{% endif %}"><i class="fa-solid fa-seedling"></i> Seeds & Crops Directory</a></li>
+      <li><a href="{{ url_for('tools') }}" class="mobile-nav-link {% if request.path == '/tools' %}active{% endif %}"><i class="fa-solid fa-tractor"></i> Farming Tools & Machinery</a></li>
+      <li><a href="{{ url_for('schemes') }}" class="mobile-nav-link {% if request.path == '/schemes' %}active{% endif %}"><i class="fa-solid fa-building-columns"></i> Government Schemes</a></li>
+      <li><a href="{{ url_for('loans') }}" class="mobile-nav-link {% if request.path == '/loans' %}active{% endif %}"><i class="fa-solid fa-hand-holding-dollar"></i> Loans & Subsidies</a></li>
+      <li><a href="{{ url_for('resources') }}" class="mobile-nav-link {% if request.path == '/resources' %}active{% endif %}"><i class="fa-solid fa-book-open"></i> Farming Knowledge Guides</a></li>
+      <li><a href="{{ url_for('weather') }}" class="mobile-nav-link {% if request.path == '/weather' %}active{% endif %}"><i class="fa-solid fa-cloud-sun-rain"></i> Weather & Farm Tips</a></li>
+      <li><a href="{{ url_for('marketplace') }}" class="mobile-nav-link {% if request.path == '/marketplace' %}active{% endif %}"><i class="fa-solid fa-store"></i> Agri Marketplace & Mandis</a></li>
+      <li><a href="{{ url_for('community') }}" class="mobile-nav-link {% if request.path == '/community' %}active{% endif %}"><i class="fa-solid fa-people-group"></i> Farmer Community Hub</a></li>
+      
+      <li style="margin-top: 1rem; border-top: 1px solid var(--border-light); padding-top: 1rem;">
+        {% if current_user %}
+          <a href="{{ url_for('logout') }}" class="btn btn-outline-danger" style="width: 100%;">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+          </a>
+        {% else %}
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('login') }}" class="btn btn-secondary" style="flex: 1;"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary" style="flex: 1;"><i class="fa-solid fa-user-plus"></i> Register</a>
+          </div>
+        {% endif %}
+      </li>
+    </ul>
+  </div>
+
+  <!-- FLASH NOTIFICATIONS CONTAINER -->
+  <div class="container flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-exclamation{% elif category == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+              <span>{{ message }}</span>
+            </div>
+            <button class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- MAIN PAGE CONTENT -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- MODAL: RESOURCE DETAILS MODAL -->
+  <div class="modal-backdrop" id="resourceDetailsModal">
+    <div class="modal-dialog">
+      <button class="modal-close-btn" onclick="closeModal('resourceDetailsModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div style="margin-bottom: 1.25rem;">
+        <span class="section-badge" id="modalResCategory">Category</span>
+        <h2 class="resource-card-title" id="modalResTitle" style="font-size: 1.6rem; margin-top: 0.5rem;">Resource Title</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-landmark"></i> Provider: <span id="modalResProvider">Agency</span></p>
+      </div>
+
+      <p id="modalResDesc" style="font-size: 0.98rem; line-height: 1.7; color: var(--text-main); margin-bottom: 1.5rem;"></p>
+
+      <div class="resource-info-box" id="modalResInfoBox">
+        <!-- Dynamic rows populated via JS -->
+      </div>
+
+      <div style="background-color: var(--amber-light); border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1.5rem; font-size: 0.82rem; color: #92400e;">
+        <i class="fa-solid fa-circle-info"></i> <strong>Important Note:</strong> Information displayed on Shram setuu is compiled for farmer guidance. Always verify official notifications, deadlines, and eligibility directly from the respective government portal or department before applying.
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+        <button class="btn btn-secondary" onclick="closeModal('resourceDetailsModal')">Close</button>
+        <a href="#" target="_blank" id="modalResExternalLink" class="btn btn-primary" rel="noopener noreferrer">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Official Portal
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RATING & FEEDBACK -->
+  <div class="modal-backdrop" id="ratingModal">
+    <div class="modal-dialog">
+      <button class="modal-close-btn" onclick="closeModal('ratingModal')"><i class="fa-solid fa-xmark"></i></button>
+      <div style="margin-bottom: 1.25rem;">
+        <span class="section-badge"><i class="fa-solid fa-star"></i> Farmer Review</span>
+        <h2 class="resource-card-title" id="ratingResourceTitle" style="font-size: 1.4rem; margin-top: 0.5rem;">Rate Resource</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Share your feedback and experience to help fellow farmers across India.</p>
+      </div>
+
+      {% if current_user %}
+        <form action="{{ url_for('api_rate_feedback') }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="resource_id" id="ratingResourceId">
+          <input type="hidden" name="rating" id="ratingValue" value="5">
+
+          <div class="form-group">
+            <label class="form-label">Your Rating</label>
+            <div class="star-rating-picker">
+              <i class="fa-solid fa-star active" data-val="1"></i>
+              <i class="fa-solid fa-star active" data-val="2"></i>
+              <i class="fa-solid fa-star active" data-val="3"></i>
+              <i class="fa-solid fa-star active" data-val="4"></i>
+              <i class="fa-solid fa-star active" data-val="5"></i>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="feedbackComment" class="form-label">Your Experience / Suggestions</label>
+            <textarea name="comment" id="feedbackComment" class="form-control" rows="4" placeholder="How did this scheme, crop guide or tool help you? Any practical tips for other farmers?" required></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('ratingModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Submit Feedback</button>
+          </div>
+        </form>
+      {% else %}
+        <div style="text-align: center; padding: 2rem 1rem;">
+          <i class="fa-solid fa-user-lock" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+          <p style="font-size: 1.05rem; margin-bottom: 1.5rem; color: var(--text-main);">Please log in to submit reviews and rate agriculture resources.</p>
+          <a href="{{ url_for('login') }}" class="btn btn-primary"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login to Continue</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- SITE FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Brand & Vision -->
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Shram setuu Logo" style="height: 38px; width: 38px; object-fit: contain; border-radius: 6px;">
+            <span>Shram setuu</span>
+          </div>
+          <p class="footer-desc">
+            An agriculture resource and farmer enablement platform dedicated to connecting Indian cultivators with authentic government schemes, crop guides, modern tools, weather advisories, and community support.
+          </p>
+          <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+            <span class="user-badge" style="background: rgba(255,255,255,0.08); color: #86efac; border: 1px solid rgba(255,255,255,0.15);">
+              <i class="fa-solid fa-seedling"></i> Indian Agriculture Empowered
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div>
+          <h4 class="footer-col-title">Quick Links</h4>
+          <ul class="footer-links-list">
+            <li><a href="{{ url_for('index') }}"><i class="fa-solid fa-angle-right"></i> Home</a></li>
+            <li><a href="{{ url_for('dashboard') }}"><i class="fa-solid fa-angle-right"></i> Farmer Dashboard</a></li>
+            <li><a href="{{ url_for('schemes') }}"><i class="fa-solid fa-angle-right"></i> Government Schemes</a></li>
+            <li><a href="{{ url_for('marketplace') }}"><i class="fa-solid fa-angle-right"></i> Mandi & Marketplace</a></li>
+            <li><a href="{{ url_for('community') }}"><i class="fa-solid fa-angle-right"></i> Farmer Community</a></li>
+          </ul>
+        </div>
+
+        <!-- Resource Categories -->
+        <div>
+          <h4 class="footer-col-title">Agri Categories</h4>
+          <ul class="footer-links-list">
+            <li><a href="{{ url_for('crops') }}"><i class="fa-solid fa-angle-right"></i> Seeds & Crops</a></li>
+            <li><a href="{{ url_for('tools') }}"><i class="fa-solid fa-angle-right"></i> Farming Equipment</a></li>
+            <li><a href="{{ url_for('loans') }}"><i class="fa-solid fa-angle-right"></i> Loans & Subsidies</a></li>
+            <li><a href="{{ url_for('resources') }}"><i class="fa-solid fa-angle-right"></i> Organic & Soil Guides</a></li>
+            <li><a href="{{ url_for('weather') }}"><i class="fa-solid fa-angle-right"></i> Weather Forecasts</a></li>
+          </ul>
+        </div>
+
+        <!-- Helplines & Support -->
+        <div>
+          <h4 class="footer-col-title">Farmer Helpline</h4>
+          <div style="margin-bottom: 1rem;">
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.25rem;">National Kisan Call Center:</p>
+            <a href="tel:18001801551" style="font-size: 1.25rem; font-weight: 800; color: #fef08a; display: inline-flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-phone-volume"></i> 1800-180-1551
+            </a>
+            <span style="display: block; font-size: 0.75rem; color: #86efac;">Toll-Free • 22 Regional Languages • 6 AM - 10 PM</span>
+          </div>
+          <div style="font-size: 0.85rem; color: #cbd5e1;">
+            <p><i class="fa-solid fa-building-ngo" style="color: var(--amber-warm);"></i> 730+ Krishi Vigyan Kendras (KVK)</p>
+            <p><i class="fa-solid fa-headset" style="color: var(--primary-light);"></i> Support: support@kisansahayak.in</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legal & Disclaimer Box -->
+      <div class="footer-disclaimer-box">
+        <strong><i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b;"></i> Disclaimer:</strong> Information displayed on this platform is curated for educational and informational purposes. Shram setuu redirects farmers toward authorized official government websites and services. Users should verify official scheme guidelines, eligibility rules, and documentation requirements from the respective official department portals.
+      </div>
+
+      <!-- Footer Bottom -->
+      <div class="footer-bottom">
+        <div>
+          &copy; {{ now_year }} <strong>Shram setuu</strong>. All rights reserved. Smart Resources • Better Farming • Stronger Farmers.
+        </div>
+        <div style="display: flex; gap: 1.25rem;">
+          <a href="{{ url_for('schemes') }}" style="color: #94a3b8;">PM-KISAN</a>
+          <a href="{{ url_for('schemes') }}" style="color: #94a3b8;">PMFBY</a>
+          <a href="{{ url_for('loans') }}" style="color: #94a3b8;">Kisan Credit Card</a>
+          <a href="{{ url_for('marketplace') }}" style="color: #94a3b8;">e-NAM</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Back to Top Button -->
+  <button id="backToTopBtn" class="back-to-top-btn" aria-label="Back to top of page" title="Scroll to top">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <!-- Main JavaScript File -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

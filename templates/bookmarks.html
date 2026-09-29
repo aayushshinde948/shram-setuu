@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Resources & Schemes — Shram setuu{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+  <!-- PAGE HEADER -->
+  <div class="section-header" style="text-align: left; margin-bottom: 2rem;">
+    <span class="section-badge"><i class="fa-solid fa-bookmark"></i> Personal Bookmarks</span>
+    <h1 class="section-title">Saved Agriculture Resources</h1>
+    <p class="section-subtitle" style="margin: 0;">
+      Quick access to your bookmarked government schemes, high-yield crop guides, implements, loans, and marketplace portals.
+    </p>
+  </div>
+
+  <!-- FILTER STRIP -->
+  <div class="filter-search-strip">
+    <div class="filter-pills-row">
+      <span style="font-size: 0.88rem; font-weight: 700; color: var(--forest-dark); margin-right: 0.5rem;">Resource Type:</span>
+      {% for type_val, type_label in types %}
+        <a href="{{ url_for('bookmarks', type=type_val) }}" class="filter-pill {% if active_type == type_val %}active{% endif %}">
+          {{ type_label }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- SAVED RESOURCES GRID -->
+  {% if saved_resources %}
+    <div class="resource-grid">
+      {% for res in saved_resources %}
+        <div class="resource-card">
+          <div class="resource-card-img-wrap">
+            <img src="{{ res.image_url }}" alt="{{ res.title }}" class="resource-card-img" loading="lazy">
+            <span class="resource-badge-tag">{{ res.category_name }}</span>
+            <button class="bookmark-btn-overlay bookmark-btn-toggle saved" data-id="{{ res.id }}" title="Remove from Bookmarks">
+              <i class="fa-solid fa-bookmark"></i>
+            </button>
+          </div>
+
+          <div class="resource-card-body">
+            <div class="resource-meta-top">
+              <span style="text-transform: capitalize;"><i class="fa-solid fa-tag"></i> {{ res.resource_type }}</span>
+              <span style="font-size: 0.78rem; color: var(--text-light);"><i class="fa-regular fa-clock"></i> Saved {{ res.bookmarked_date|format_date }}</span>
+            </div>
+
+            <h3 class="resource-card-title">{{ res.title }}</h3>
+            <p class="resource-card-desc">{{ res.description }}</p>
+
+            {% if res.season_climate or res.eligibility or res.benefits %}
+              <div class="resource-info-box">
+                <div class="resource-info-row">
+                  <i class="fa-solid fa-circle-info"></i>
+                  <div>{{ (res.season_climate or res.eligibility or res.benefits)[:85] }}...</div>
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="resource-card-footer">
+              <button class="btn btn-secondary btn-sm open-details-modal" data-id="{{ res.id }}">
+                <i class="fa-solid fa-circle-info"></i> Details
+              </button>
+              <div style="display: flex; gap: 0.4rem;">
+                <button class="btn btn-secondary btn-sm open-rating-modal" data-id="{{ res.id }}" data-title="{{ res.title }}" title="Rate this">
+                  <i class="fa-solid fa-star" style="color: var(--amber-warm);"></i>
+                </button>
+                {% if res.external_url %}
+                  <a href="{{ res.external_url }}" target="_blank" class="btn btn-primary btn-sm" rel="noopener noreferrer">
+                    <span>Open Link</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 4rem 1.5rem; background: #ffffff; border-radius: var(--radius-lg); border: 1px solid var(--border-light);">
+      <div style="font-size: 3rem; color: var(--amber-warm); margin-bottom: 1rem;">
+        <i class="fa-regular fa-bookmark"></i>
+      </div>
+      <h3 style="font-size: 1.4rem; color: var(--forest-dark); margin-bottom: 0.5rem;">No Saved Resources in this Category</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Explore government schemes, crops, or tools and tap the bookmark icon to save them to your personal dashboard.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1rem;">
+        <a href="{{ url_for('schemes') }}" class="btn btn-primary">Explore Schemes</a>
+        <a href="{{ url_for('crops') }}" class="btn btn-secondary">Explore Crops</a>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

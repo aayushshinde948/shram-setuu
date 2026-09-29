@@ -3,7 +3,10 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
 DB_FOLDER = os.path.join(os.path.dirname(__file__), 'database')
-DB_PATH = os.path.join(DB_FOLDER, 'database.db')
+if os.environ.get('VERCEL'):
+    DB_PATH = '/tmp/database.db'
+else:
+    DB_PATH = os.path.join(DB_FOLDER, 'database.db')
 
 def get_db(db_path=None):
     if db_path is None:
